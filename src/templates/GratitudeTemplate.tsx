@@ -24,6 +24,8 @@ export function GratitudeTemplate({ api }: GratitudeTemplateProps) {
                 onChange={(e) => updateGratitude(entry.id, { date: e.target.value })}
                 placeholder="…"
                 aria-label="Date"
+                data-erase-field="grat-date"
+                data-erase-entry={entry.id}
               />
             </div>
             <div className="grat-prompt">i am grateful for…</div>
@@ -38,6 +40,9 @@ export function GratitudeTemplate({ api }: GratitudeTemplateProps) {
                     updateGratitude(entry.id, { items })
                   }}
                   aria-label={`Grateful item ${idx + 1}`}
+                  data-erase-field="grat-item"
+                  data-erase-entry={entry.id}
+                  data-erase-index={idx}
                 />
               </div>
             ))}

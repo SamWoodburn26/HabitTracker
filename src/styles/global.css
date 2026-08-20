@@ -71,6 +71,7 @@ button {
 .top-bar {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 14px;
 }
@@ -379,6 +380,18 @@ button {
 
 .hub-card.journal {
   background: linear-gradient(160deg, #f3eef9, #e4d8f2);
+}
+
+.hub-lock-badge {
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #5c3d7a;
+  background: rgba(123, 94, 167, 0.18);
+  border-radius: 999px;
+  padding: 4px 10px;
 }
 
 .toolbar-row {

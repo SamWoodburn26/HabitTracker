@@ -32,7 +32,11 @@ function AppShell() {
   return (
     <div className="app-shell">
       {view === 'home' && (
-        <HomeHub onSelect={setView} syncStatus={api.syncStatus} />
+        <HomeHub
+          onSelect={setView}
+          syncStatus={api.syncStatus}
+          journalLocked={Boolean(api.data.journalPinHash)}
+        />
       )}
       {view === 'pet' && <CarePetPage api={api} onBack={() => setView('home')} />}
       {view === 'habits' && (

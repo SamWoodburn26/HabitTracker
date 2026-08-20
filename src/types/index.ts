@@ -92,7 +92,10 @@ export type AppData = {
   dailySheets: DailyPlannerSheet[]
   activeDailySheetId: string
   journalPages: JournalPage[]
+  /** SHA-256 hash of the 4-digit journal lock code, or null if unlocked */
+  journalPinHash: string | null
   coins: number
+  petGameHighScore: number
   activeTemplate: TemplateId
   inputMode: InputMode
   activeJournalPageId: string

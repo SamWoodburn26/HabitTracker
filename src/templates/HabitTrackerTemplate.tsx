@@ -28,6 +28,7 @@ export function HabitTrackerTemplate({ api }: HabitTrackerTemplateProps) {
           onChange={(e) => setHabitMonthLabel(e.target.value)}
           placeholder="Month / year"
           aria-label="Month"
+          data-erase-field="habit-month"
         />
       </div>
 
@@ -77,6 +78,8 @@ export function HabitTrackerTemplate({ api }: HabitTrackerTemplateProps) {
                   value={item}
                   onChange={(e) => setHobbyItem(i, e.target.value)}
                   aria-label={`Hobby ${i + 1}`}
+                  data-erase-field="hobby"
+                  data-erase-index={i}
                 />
               </label>
             ))}
@@ -89,6 +92,7 @@ export function HabitTrackerTemplate({ api }: HabitTrackerTemplateProps) {
             onChange={(e) => setMonthHighlights(e.target.value)}
             placeholder="Write highlights here…"
             aria-label="Month highlights"
+            data-erase-field="highlights"
           />
         </section>
       </div>

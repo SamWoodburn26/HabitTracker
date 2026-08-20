@@ -7,14 +7,20 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import type { Session, User } from '@supabase/supabase-js'
-import { getSupabase, isSupabaseConfigured } from '../lib/supabase'
+import {
+  apiMe,
+  apiSignIn,
+  apiSignUp,
+  getToken,
+  isApiConfigured,
+  setToken,
+  type AuthUser,
+} from '../lib/api'
 
 type AuthContextValue = {
   configured: boolean
   loading: boolean
-  session: Session | null
-  user: User | null
+  user: AuthUser | null
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string) => Promise<{ needsEmailConfirm: boolean }>
   signOut: () => Promise<void>
@@ -23,71 +29,69 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(isSupabaseConfigured)
+  const [user, setUser] = useState<AuthUser | null>(null)
+  const [loading, setLoading] = useState(isApiConfigured)
 
   useEffect(() => {
-    const supabase = getSupabase()
-    if (!supabase) {
+    if (!isApiConfigured) {
       setLoading(false)
       return
     }
 
     let mounted = true
-    supabase.auth.getSession().then(({ data }) => {
-      if (mounted) {
-        setSession(data.session)
-        setLoading(false)
-      }
-    })
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, next) => {
-      setSession(next)
+    const token = getToken()
+    if (!token) {
       setLoading(false)
-    })
+      return
+    }
+
+    apiMe(token)
+      .then((next) => {
+        if (mounted) setUser(next)
+      })
+      .catch(() => {
+        setToken(null)
+        if (mounted) setUser(null)
+      })
+      .finally(() => {
+        if (mounted) setLoading(false)
+      })
 
     return () => {
       mounted = false
-      subscription.unsubscribe()
     }
   }, [])
 
   const signIn = useCallback(async (email: string, password: string) => {
-    const supabase = getSupabase()
-    if (!supabase) throw new Error('Sign-in is not configured yet.')
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) throw error
+    if (!isApiConfigured) throw new Error('Sign-in is not configured yet.')
+    const { user: next, token } = await apiSignIn(email, password)
+    setToken(token)
+    setUser(next)
   }, [])
 
   const signUp = useCallback(async (email: string, password: string) => {
-    const supabase = getSupabase()
-    if (!supabase) throw new Error('Sign-in is not configured yet.')
-    const { data, error } = await supabase.auth.signUp({ email, password })
-    if (error) throw error
-    const needsEmailConfirm = !data.session
-    return { needsEmailConfirm }
+    if (!isApiConfigured) throw new Error('Sign-in is not configured yet.')
+    const { user: next, token } = await apiSignUp(email, password)
+    setToken(token)
+    setUser(next)
+    return { needsEmailConfirm: false }
   }, [])
 
   const signOut = useCallback(async () => {
-    const supabase = getSupabase()
-    if (!supabase) return
-    const { error } = await supabase.auth.signOut()
-    if (error) throw error
+    setToken(null)
+    setUser(null)
   }, [])
 
   const value = useMemo<AuthContextValue>(
     () => ({
-      configured: isSupabaseConfigured,
+      configured: isApiConfigured,
       loading,
-      session,
-      user: session?.user ?? null,
+      user,
       signIn,
       signUp,
       signOut,
     }),
-    [loading, session, signIn, signUp, signOut],
+    [loading, user, signIn, signUp, signOut],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

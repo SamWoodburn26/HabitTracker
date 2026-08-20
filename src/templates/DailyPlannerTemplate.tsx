@@ -21,6 +21,8 @@ export function DailyPlannerTemplate({ api }: DailyPlannerTemplateProps) {
               onChange={(e) => updateDailyPlan(plan.id, { date: e.target.value })}
               placeholder="Date"
               aria-label="Date"
+              data-erase-field="dp-date"
+              data-erase-entry={plan.id}
             />
             <div className="dp-cols">
               <div>
@@ -36,6 +38,9 @@ export function DailyPlannerTemplate({ api }: DailyPlannerTemplateProps) {
                         updateDailyPlan(plan.id, { wantTo })
                       }}
                       aria-label={`Want to ${i + 1}`}
+                      data-erase-field="wantTo"
+                      data-erase-entry={plan.id}
+                      data-erase-index={i}
                     />
                   ))}
                 </div>
@@ -53,6 +58,9 @@ export function DailyPlannerTemplate({ api }: DailyPlannerTemplateProps) {
                         updateDailyPlan(plan.id, { needTo })
                       }}
                       aria-label={`Need to ${i + 1}`}
+                      data-erase-field="needTo"
+                      data-erase-entry={plan.id}
+                      data-erase-index={i}
                     />
                   ))}
                 </div>
@@ -65,6 +73,8 @@ export function DailyPlannerTemplate({ api }: DailyPlannerTemplateProps) {
                   value={plan.goal}
                   onChange={(e) => updateDailyPlan(plan.id, { goal: e.target.value })}
                   aria-label="Today's goal"
+                  data-erase-field="goal"
+                  data-erase-entry={plan.id}
                 />
               </label>
               <label>
@@ -75,6 +85,8 @@ export function DailyPlannerTemplate({ api }: DailyPlannerTemplateProps) {
                     updateDailyPlan(plan.id, { highlight: e.target.value })
                   }
                   aria-label="Today's highlight"
+                  data-erase-field="highlight"
+                  data-erase-entry={plan.id}
                 />
               </label>
             </div>

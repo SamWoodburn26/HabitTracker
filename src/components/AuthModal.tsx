@@ -63,9 +63,10 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
         {!configured ? (
           <div className="auth-setup-note">
             <p>
-              Cloud sign-in needs a free Supabase project. Add your URL and anon key to{' '}
-              <code>.env.local</code> (see <code>.env.example</code>), run the SQL in{' '}
-              <code>supabase/schema.sql</code>, then restart the dev server.
+              Sign-in isn’t configured for this deploy yet. Locally, run{' '}
+              <code>npm run dev</code> (API + Vite) with <code>MONGODB_URI</code> and{' '}
+              <code>JWT_SECRET</code> in <code>.env.local</code>. For production, host the
+              API and set <code>VITE_API_URL</code> to that origin.
             </p>
           </div>
         ) : (

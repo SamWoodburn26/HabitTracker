@@ -274,6 +274,10 @@ export function useAppData({ userId = null }: UseAppDataOptions = {}) {
     setData((prev) => ({ ...prev, activeJournalPageId }))
   }, [])
 
+  const setJournalPinHash = useCallback((journalPinHash: string | null) => {
+    setData((prev) => ({ ...prev, journalPinHash }))
+  }, [])
+
   const addHabitSheet = useCallback(() => {
     setData((prev) => {
       const sheet = createHabitSheet(prev.habitSheets.length + 1)
@@ -373,6 +377,13 @@ export function useAppData({ userId = null }: UseAppDataOptions = {}) {
     }))
   }, [])
 
+  const setPetGameHighScore = useCallback((score: number) => {
+    const next = Math.max(0, Math.floor(score))
+    setData((prev) =>
+      next > (prev.petGameHighScore ?? 0) ? { ...prev, petGameHighScore: next } : prev,
+    )
+  }, [])
+
   return {
     data,
     pet,
@@ -394,6 +405,7 @@ export function useAppData({ userId = null }: UseAppDataOptions = {}) {
     setJournalStrokes,
     addJournalPage,
     setActiveJournalPageId,
+    setJournalPinHash,
     addHabitSheet,
     setActiveHabitSheetId,
     setHabitSheetStrokes,
@@ -405,6 +417,7 @@ export function useAppData({ userId = null }: UseAppDataOptions = {}) {
     setDailySheetStrokes,
     setColor,
     setColors,
+    setPetGameHighScore,
   }
 }
 

@@ -5,6 +5,7 @@ import { AuthModal } from './AuthModal'
 type HomeHubProps = {
   onSelect: (view: 'pet' | 'habits' | 'journal') => void
   syncStatus?: 'idle' | 'syncing' | 'saved' | 'error'
+  journalLocked?: boolean
 }
 
 function EggIcon() {
@@ -43,7 +44,7 @@ function JournalIcon() {
   )
 }
 
-export function HomeHub({ onSelect, syncStatus = 'idle' }: HomeHubProps) {
+export function HomeHub({ onSelect, syncStatus = 'idle', journalLocked = false }: HomeHubProps) {
   const { user, loading, signOut, configured } = useAuth()
   const [authOpen, setAuthOpen] = useState(false)
 
@@ -99,6 +100,7 @@ export function HomeHub({ onSelect, syncStatus = 'idle' }: HomeHubProps) {
         >
           <JournalIcon />
           <span className="label">Journal</span>
+          {journalLocked && <span className="hub-lock-badge">Locked</span>}
         </button>
       </div>
 

@@ -1,10 +1,12 @@
+import { PetMiniGame } from '../components/PetMiniGame'
+import { PetPlaceholder } from '../components/PetPlaceholder'
+import { TopBar } from '../components/TopBar'
+import type { AppDataApi } from '../hooks/useAppData'
+import { petGameBoostLabels } from '../lib/petGame'
 import {
   CHECKS_PER_EVOLUTION,
   TOTAL_EVOLUTIONS,
 } from '../lib/petProgress'
-import { PetPlaceholder } from '../components/PetPlaceholder'
-import { TopBar } from '../components/TopBar'
-import type { AppDataApi } from '../hooks/useAppData'
 
 type CarePetPageProps = {
   api: AppDataApi
@@ -12,9 +14,10 @@ type CarePetPageProps = {
 }
 
 export function CarePetPage({ api, onBack }: CarePetPageProps) {
-  const { pet, data } = api
+  const { pet, data, setPetGameHighScore } = api
   const checksToNext =
     pet.nextThreshold !== null ? pet.nextThreshold - pet.totalChecks : 0
+  const boosts = petGameBoostLabels(pet.totalChecks)
 
   return (
     <div>
@@ -66,6 +69,30 @@ export function CarePetPage({ api, onBack }: CarePetPageProps) {
             Fully evolved lavender guardian — keep checking habits for coins!
           </p>
         )}
+
+        <section className="pet-game-section" aria-labelledby="sky-hop-title">
+          <h3 id="sky-hop-title">Sky Hop</h3>
+          <p className="muted pet-game-copy">
+            Tap to keep your pet hopping through the garden. The more habits you
+            check, the stronger they fly.
+          </p>
+          <div className="pet-game-boosts">
+            {boosts.map((label) => (
+              <span key={label} className="pet-game-boost">
+                {label}
+              </span>
+            ))}
+          </div>
+          {data.petGameHighScore > 0 && (
+            <p className="pet-game-best">Best {data.petGameHighScore}</p>
+          )}
+          <PetMiniGame
+            totalChecks={pet.totalChecks}
+            evolution={pet.evolution}
+            highScore={data.petGameHighScore}
+            onHighScore={setPetGameHighScore}
+          />
+        </section>
       </div>
     </div>
   )

@@ -90,11 +90,17 @@ export function migrateAppData(parsed: LegacyAppData): AppData {
     journalPages: parsed.journalPages?.length
       ? parsed.journalPages
       : defaults.journalPages,
+    journalPinHash:
+      typeof parsed.journalPinHash === 'string' ? parsed.journalPinHash : null,
     activeJournalPageId:
       parsed.activeJournalPageId ??
       (parsed.journalPages?.[0]?.id ?? defaults.activeJournalPageId),
     colors,
     coins: parsed.coins ?? 0,
+    petGameHighScore:
+      typeof parsed.petGameHighScore === 'number' && parsed.petGameHighScore > 0
+        ? Math.floor(parsed.petGameHighScore)
+        : 0,
     activeTemplate: parsed.activeTemplate ?? 'habit-tracker',
     inputMode: parsed.inputMode === 'write' ? 'write' : 'type',
   }

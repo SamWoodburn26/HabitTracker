@@ -29,6 +29,36 @@ export function strokeIntersectsPolygon(
   return pointInPolygon(points[points.length - 1], polygon)
 }
 
+/** True when two polylines come within `threshold` of each other. */
+export function pathsWithinDistance(
+  a: Point[],
+  b: Point[],
+  threshold: number,
+): boolean {
+  if (a.length === 0 || b.length === 0 || threshold <= 0) return false
+  const sampleA = samplePoints(a, 48)
+  const sampleB = samplePoints(b, 64)
+  const t2 = threshold * threshold
+  for (const p of sampleA) {
+    for (const q of sampleB) {
+      const dx = p.x - q.x
+      const dy = p.y - q.y
+      if (dx * dx + dy * dy <= t2) return true
+    }
+  }
+  return false
+}
+
+function samplePoints(points: Point[], maxSamples: number): Point[] {
+  if (points.length <= maxSamples) return points
+  const step = Math.max(1, Math.floor(points.length / maxSamples))
+  const sampled: Point[] = []
+  for (let i = 0; i < points.length; i += step) sampled.push(points[i])
+  const last = points[points.length - 1]
+  if (sampled[sampled.length - 1] !== last) sampled.push(last)
+  return sampled
+}
+
 export function polygonToPath(points: Point[]): string {
   if (!points.length) return ''
   return (

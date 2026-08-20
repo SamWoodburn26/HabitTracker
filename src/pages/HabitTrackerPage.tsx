@@ -1,14 +1,19 @@
-import { useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ColorPickerBar } from '../components/ColorPickerBar'
-import { InkCanvas, InkTools } from '../components/InkCanvas'
+import {
+  InkCanvas,
+  InkTools,
+  type EraseFieldHit,
+  type InkTool,
+} from '../components/InkCanvas'
 import { ModeToggle } from '../components/ModeToggle'
 import { TemplatePicker } from '../components/TemplatePicker'
 import { TopBar } from '../components/TopBar'
 import type { AppDataApi } from '../hooks/useAppData'
+import { useStrokeUndo } from '../hooks/useStrokeUndo'
 import { DailyPlannerTemplate } from '../templates/DailyPlannerTemplate'
 import { GratitudeTemplate } from '../templates/GratitudeTemplate'
 import { HabitTrackerTemplate } from '../templates/HabitTrackerTemplate'
-import type { InkStroke } from '../types'
 
 type HabitTrackerPageProps = {
   api: AppDataApi
@@ -48,11 +53,17 @@ export function HabitTrackerPage({ api, onBack }: HabitTrackerPageProps) {
     addDailySheet,
     setActiveDailySheetId,
     setDailySheetStrokes,
+    setHabitMonthLabel,
+    setHobbyItem,
+    setMonthHighlights,
+    updateGratitude,
+    updateDailyPlan,
     setColor,
   } = api
 
   const writeMode = data.inputMode === 'write'
   const { colors } = data
+  const [inkTool, setInkTool] = useState<InkTool>('pen')
 
   useEffect(() => {
     const root = document.documentElement
@@ -67,6 +78,10 @@ export function HabitTrackerPage({ api, onBack }: HabitTrackerPageProps) {
     root.style.setProperty('--dp-line', hexToRgba(colors.dailyPlanner, 0.4))
     root.style.setProperty('--grat-item-line', hexToRgba(colors.gratitudeAccent, 0.5))
   }, [colors])
+
+  useEffect(() => {
+    if (!writeMode) setInkTool('pen')
+  }, [writeMode])
 
   const pageNav = useMemo(() => {
     if (data.activeTemplate === 'habit-tracker') {
@@ -119,9 +134,98 @@ export function HabitTrackerPage({ api, onBack }: HabitTrackerPageProps) {
     setDailySheetStrokes,
   ])
 
-  const persistStrokes = (next: InkStroke[]) => {
-    pageNav.setStrokes(next)
-  }
+  const pageKey = `${data.activeTemplate}:${pageNav.activeId}`
+  const { commit, undo, canUndo } = useStrokeUndo(
+    pageKey,
+    pageNav.strokes,
+    pageNav.setStrokes,
+  )
+
+  const eraseTypedFields = useCallback(
+    (fields: EraseFieldHit[]) => {
+      for (const hit of fields) {
+        switch (hit.field) {
+          case 'habit-month':
+            if (activeHabitSheet?.habitMonthLabel) setHabitMonthLabel('')
+            break
+          case 'hobby':
+            if (
+              hit.index != null &&
+              activeHabitSheet?.hobbyList[hit.index]
+            ) {
+              setHobbyItem(hit.index, '')
+            }
+            break
+          case 'highlights':
+            if (activeHabitSheet?.monthHighlights) setMonthHighlights('')
+            break
+          case 'grat-date': {
+            if (!hit.entryId || !activeGratitudeSheet) break
+            const entry = activeGratitudeSheet.entries.find((e) => e.id === hit.entryId)
+            if (entry?.date) updateGratitude(hit.entryId, { date: '' })
+            break
+          }
+          case 'grat-item': {
+            if (!hit.entryId || hit.index == null || !activeGratitudeSheet) break
+            const entry = activeGratitudeSheet.entries.find((e) => e.id === hit.entryId)
+            if (!entry || !entry.items[hit.index]) break
+            const items = [...entry.items] as [string, string, string]
+            items[hit.index] = ''
+            updateGratitude(hit.entryId, { items })
+            break
+          }
+          case 'dp-date': {
+            if (!hit.entryId || !activeDailySheet) break
+            const plan = activeDailySheet.plans.find((p) => p.id === hit.entryId)
+            if (plan?.date) updateDailyPlan(hit.entryId, { date: '' })
+            break
+          }
+          case 'wantTo': {
+            if (!hit.entryId || hit.index == null || !activeDailySheet) break
+            const plan = activeDailySheet.plans.find((p) => p.id === hit.entryId)
+            if (!plan || !plan.wantTo[hit.index]) break
+            const wantTo = [...plan.wantTo]
+            wantTo[hit.index] = ''
+            updateDailyPlan(hit.entryId, { wantTo })
+            break
+          }
+          case 'needTo': {
+            if (!hit.entryId || hit.index == null || !activeDailySheet) break
+            const plan = activeDailySheet.plans.find((p) => p.id === hit.entryId)
+            if (!plan || !plan.needTo[hit.index]) break
+            const needTo = [...plan.needTo]
+            needTo[hit.index] = ''
+            updateDailyPlan(hit.entryId, { needTo })
+            break
+          }
+          case 'goal': {
+            if (!hit.entryId || !activeDailySheet) break
+            const plan = activeDailySheet.plans.find((p) => p.id === hit.entryId)
+            if (plan?.goal) updateDailyPlan(hit.entryId, { goal: '' })
+            break
+          }
+          case 'highlight': {
+            if (!hit.entryId || !activeDailySheet) break
+            const plan = activeDailySheet.plans.find((p) => p.id === hit.entryId)
+            if (plan?.highlight) updateDailyPlan(hit.entryId, { highlight: '' })
+            break
+          }
+          default:
+            break
+        }
+      }
+    },
+    [
+      activeHabitSheet,
+      activeGratitudeSheet,
+      activeDailySheet,
+      setHabitMonthLabel,
+      setHobbyItem,
+      setMonthHighlights,
+      updateGratitude,
+      updateDailyPlan,
+    ],
+  )
 
   return (
     <div>
@@ -134,9 +238,12 @@ export function HabitTrackerPage({ api, onBack }: HabitTrackerPageProps) {
         <ModeToggle mode={data.inputMode} onChange={setInputMode} />
         {writeMode && (
           <InkTools
-            onUndo={() => persistStrokes(pageNav.strokes.slice(0, -1))}
-            onClear={() => persistStrokes([])}
-            disabled={pageNav.strokes.length === 0}
+            tool={inkTool}
+            onToolChange={setInkTool}
+            onUndo={undo}
+            onClear={() => commit([])}
+            canUndo={canUndo}
+            canClear={pageNav.strokes.length > 0}
           />
         )}
       </div>
@@ -173,16 +280,19 @@ export function HabitTrackerPage({ api, onBack }: HabitTrackerPageProps) {
         )}
         <InkCanvas
           strokes={pageNav.strokes}
-          onChange={persistStrokes}
+          onChange={commit}
+          onEraseFields={eraseTypedFields}
           enabled={writeMode}
+          tool={inkTool}
           color={colors.ink}
           size={3.5}
         />
       </div>
       {writeMode && (
         <p className="muted" style={{ marginTop: 10, fontSize: '0.9rem' }}>
-          Write mode: draw with Apple Pencil or finger. Switch to Type to edit
-          fields and check boxes.
+          Write mode: draw with Apple Pencil or finger. Use Erase and scribble
+          over ink or typed fields to clear them. Switch to Type to edit fields
+          and check boxes.
         </p>
       )}
     </div>
